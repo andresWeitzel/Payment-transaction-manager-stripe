@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PaymentRequest {	
+public class PaymentRequestDTO {	
 	@NotNull(message = "Amount is required")
 	@Min(value = 1, message = "Amount must be greater than 0")
 	@Schema(description = "The amount of a payment", example = "100")
