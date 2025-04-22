@@ -17,7 +17,7 @@ public class PaymentRequestDTO {
 	@NotNull(message = "Amount is required")
 	@Min(value = 1, message = "Amount must be greater than 0")
 	@Schema(description = "The amount of a payment", example = "100")
-	private Long amount;
+	private double amount;
 
 	@NotBlank(message = "Currency is required")
 	@Schema(description = "The currency of a payment", example = "USD")

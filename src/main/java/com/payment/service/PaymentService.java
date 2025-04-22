@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.payment.dto.PaymentIntentDTO;
 import com.payment.dto.PaymentRequestDTO;
+import com.payment.enums.PaymentIntentStatus;
 import com.payment.model.Payment;
 import com.payment.repository.PaymentRepository;
 import com.stripe.Stripe;
@@ -16,6 +17,7 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentIntentCollection;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.PaymentIntentListParams;
+import com.stripe.param.PaymentIntentUpdateParams;
 
 import jakarta.annotation.PostConstruct;
 
@@ -43,10 +45,12 @@ public class PaymentService {
 	public PaymentIntentDTO createPaymentIntent(PaymentRequestDTO request) throws StripeException {
 		try {
 
-			PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-					.setAmount((long) request.getAmount() * 100) // Stripe
-					// usa
-					// centavos
+			// Convertir el monto de USD a centavos (multiplicar por 100)
+			// Stripe usa centavos
+			long amountInCents = (long) (request.getAmount() * 100);
+
+			// Actualizar el amount
+			PaymentIntentCreateParams params = PaymentIntentCreateParams.builder().setAmount(amountInCents)
 					.setCurrency(request.getCurrency()).build();
 
 			PaymentIntent paymentIntent = PaymentIntent.create(params);
@@ -69,18 +73,62 @@ public class PaymentService {
 		}
 	}
 
-	public PaymentIntentDTO getPaymentStatusById(String id) throws StripeException {
+	public PaymentIntentDTO updatePaymentIntent(String paymentIntentId, PaymentRequestDTO request)
+			throws StripeException {
 		try {
-			PaymentIntent paymentIntent = PaymentIntent.retrieve(id);
+			// Recuperar el PaymentIntent
+			PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
 
 			if (paymentIntent == null || paymentIntent.getId() == null) {
-				throw new IllegalArgumentException("PaymentIntent not found with ID: " + id);
+				throw new IllegalArgumentException("Payment not found with ID: " + paymentIntentId);
+			}
+			if (!PaymentIntentStatus.isUpdatable(paymentIntent.getStatus())) {
+				throw new IllegalArgumentException(
+						"Cannot update amount of payment intent with status: " + paymentIntent.getStatus());
 			}
 
-			return new PaymentIntentDTO(paymentIntent.getId(), paymentIntent.getAmount(), paymentIntent.getCurrency(),
-					paymentIntent.getStatus(), paymentIntent.getClientSecret());
+			// Convertir el monto de USD a centavos (multiplicar por 100)
+			// Stripe usa centavos
+			long amountInCents = (long) (request.getAmount() * 100);
+
+			PaymentIntentUpdateParams params = PaymentIntentUpdateParams.builder().setAmount(amountInCents).build();
+
+			PaymentIntent updatedPaymentIntent = paymentIntent.update(params);
+
+			return new PaymentIntentDTO(updatedPaymentIntent.getId(), updatedPaymentIntent.getAmount(),
+					updatedPaymentIntent.getCurrency(), updatedPaymentIntent.getStatus(),
+					updatedPaymentIntent.getClientSecret());
+
 		} catch (StripeException e) {
-			// Lanza el error original para que sea manejado por el GlobalExceptionHandler
+			throw e;
+		}
+	}
+
+	public boolean cancelPaymentIntent(String paymentIntentId) throws StripeException {
+		try {
+			// Recuperar el PaymentIntent
+			PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+
+			if (paymentIntent == null || paymentIntent.getId() == null) {
+				throw new IllegalArgumentException("Payment not found with ID: " + paymentIntentId);
+			}
+
+			if (!PaymentIntentStatus.isCancellable(paymentIntent.getStatus())) {
+				throw new IllegalArgumentException(
+						"Cannot cancel payment intent with status: " + paymentIntent.getStatus());
+			}
+
+			// Verificar si el PaymentIntent ya fue completado
+			if ("succeeded".equals(paymentIntent.getStatus()) || "failed".equals(paymentIntent.getStatus())) {
+				throw new IllegalStateException("Cannot cancel a Payment that has already been completed.");
+			}
+
+			// Cancelar el PaymentIntent
+			paymentIntent.cancel();
+
+			return true; // Indicar que se canceló con éxito
+
+		} catch (StripeException e) {
 			throw e;
 		}
 	}
@@ -102,6 +150,22 @@ public class PaymentService {
 			throw e;
 		}
 
+	}
+
+	public PaymentIntentDTO getPaymentStatusById(String paymentIntentId) throws StripeException {
+		try {
+			PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+
+			if (paymentIntent == null || paymentIntent.getId() == null) {
+				throw new IllegalArgumentException("Payment not found with ID: " + paymentIntentId);
+			}
+
+			return new PaymentIntentDTO(paymentIntent.getId(), paymentIntent.getAmount(), paymentIntent.getCurrency(),
+					paymentIntent.getStatus(), paymentIntent.getClientSecret());
+		} catch (StripeException e) {
+			// Lanza el error original para que sea manejado por el GlobalExceptionHandler
+			throw e;
+		}
 	}
 
 }

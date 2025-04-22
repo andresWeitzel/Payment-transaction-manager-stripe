@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PaymentIntentDTO {	
 	private String id;
-	private Long amount;
+	private double amount;
 	private String currency;
 	private String status;
 	private String clientSecret;
