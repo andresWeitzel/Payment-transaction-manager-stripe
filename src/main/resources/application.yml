@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: payment-transaction-manager
+  config:
+    import: optional:dotenv:.env
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+    dialect: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true    
+
+
