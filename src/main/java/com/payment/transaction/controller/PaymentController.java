@@ -1,4 +1,4 @@
-package com.payment.controller;
+package com.payment.transaction.controller;
 
 import java.util.List;
 
@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.payment.dto.PaymentIntentDTO;
-import com.payment.dto.PaymentRequestDTO;
-import com.payment.exception.GlobalExceptionHandler;
-import com.payment.service.PaymentService;
+import com.payment.transaction.dto.PaymentIntentDTO;
+import com.payment.transaction.dto.PaymentRequestDTO;
+import com.payment.transaction.exception.GlobalExceptionHandler;
+import com.payment.transaction.service.PaymentService;
 import com.stripe.exception.StripeException;
 
 import io.swagger.v3.oas.annotations.Operation;

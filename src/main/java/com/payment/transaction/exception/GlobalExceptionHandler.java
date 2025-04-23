@@ -1,4 +1,4 @@
-package com.payment.exception;
+package com.payment.transaction.exception;
 
 import com.stripe.exception.StripeException;
 import jakarta.validation.ConstraintViolationException;

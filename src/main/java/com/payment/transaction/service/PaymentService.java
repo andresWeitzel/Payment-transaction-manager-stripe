@@ -1,4 +1,4 @@
-package com.payment.service;
+package com.payment.transaction.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -6,12 +6,12 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.payment.dto.PaymentIntentDTO;
-import com.payment.dto.PaymentRequestDTO;
-import com.payment.enums.CapturablePaymentStatusEnum;
-import com.payment.enums.PaymentIntentStatusEnum;
-import com.payment.model.Payment;
-import com.payment.repository.PaymentRepository;
+import com.payment.transaction.dto.PaymentIntentDTO;
+import com.payment.transaction.dto.PaymentRequestDTO;
+import com.payment.transaction.enums.CapturablePaymentStatusEnum;
+import com.payment.transaction.enums.PaymentIntentStatusEnum;
+import com.payment.transaction.model.Payment;
+import com.payment.transaction.repository.PaymentRepository;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;

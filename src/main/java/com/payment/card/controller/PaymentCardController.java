@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.payment.card.dto.PaymentConfirmCardDetailsDTO;
 import com.payment.card.dto.TestCardTypeDTO;
 import com.payment.card.service.PaymentCardService;
-import com.payment.dto.PaymentIntentDTO;
-import com.payment.exception.GlobalExceptionHandler;
+import com.payment.transaction.dto.PaymentIntentDTO;
+import com.payment.transaction.exception.GlobalExceptionHandler;
 import com.stripe.exception.StripeException;
 
 import io.swagger.v3.oas.annotations.Operation;

@@ -1,4 +1,4 @@
-package com.payment.model;
+package com.payment.transaction.model;
 
 import java.time.LocalDateTime;
 

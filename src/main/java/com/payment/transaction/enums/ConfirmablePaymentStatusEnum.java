@@ -1,4 +1,4 @@
-package com.payment.enums;
+package com.payment.transaction.enums;
 
 import java.util.List;
 
