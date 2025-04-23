@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -41,10 +42,10 @@ public class PaymentController extends GlobalExceptionHandler {
 	@Operation(summary = "Create a new payment intent", description = "Create a new payment intent.")
 	public ResponseEntity<PaymentIntentDTO> createPaymentIntent(@Validated @RequestBody PaymentRequestDTO request)
 			throws StripeException {
-		PaymentIntentDTO paymentIntent = paymentService.createPaymentIntent(request);
+		PaymentIntentDTO paymentIntentDTO = paymentService.createPaymentIntent(request);
 
-		PaymentIntentDTO dto = new PaymentIntentDTO(paymentIntent.getId(), paymentIntent.getAmount(),
-				paymentIntent.getCurrency(), paymentIntent.getStatus(), paymentIntent.getClientSecret());
+		PaymentIntentDTO dto = new PaymentIntentDTO(paymentIntentDTO.getId(), paymentIntentDTO.getAmount(),
+				paymentIntentDTO.getCurrency(), paymentIntentDTO.getStatus(), paymentIntentDTO.getClientSecret());
 
 		return ResponseEntity.ok(dto);
 
@@ -55,9 +56,17 @@ public class PaymentController extends GlobalExceptionHandler {
 	@Operation(summary = "Update payment intent", description = "Update the amount of a payment intent.")
 	public ResponseEntity<PaymentIntentDTO> updatePaymentIntent(@PathVariable String paymentIntentId,
 			@RequestBody PaymentRequestDTO request) throws StripeException {
-		PaymentIntentDTO updatedPaymentIntent = paymentService.updatePaymentIntent(paymentIntentId, request);
-		return ResponseEntity.ok(updatedPaymentIntent);
+		PaymentIntentDTO paymentIntentDTO = paymentService.updatePaymentIntent(paymentIntentId, request);
+		return ResponseEntity.ok(paymentIntentDTO);
 
+	}
+
+	@PatchMapping("/capture/{paymentIntentId}")
+	@Operation(summary = "Capture a PaymentIntent", description = "Captures a previously authorized PaymentIntent.")
+	public ResponseEntity<PaymentIntentDTO> capturePayment(@PathVariable String paymentIntentId)
+			throws StripeException {
+		PaymentIntentDTO paymentIntentDTO = paymentService.capturePaymentIntent(paymentIntentId);
+		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
 	// Endpoint para cancelar un PaymentIntent
@@ -69,12 +78,12 @@ public class PaymentController extends GlobalExceptionHandler {
 	}
 
 	// Endpoint para obtener todos los PaymentIntent
-	@GetMapping
+	@GetMapping("/list")
 	@Operation(summary = "Get all paginated payment", description = "Fetches all paginated payment")
 	public ResponseEntity<List<PaymentIntentDTO>> getAllPayments(@RequestParam(defaultValue = "10") int limit,
 			@RequestParam(required = false) String startingAfter) throws StripeException {
-		List<PaymentIntentDTO> payments = paymentService.getAllPayments(limit, startingAfter);
-		return ResponseEntity.ok(payments);
+		List<PaymentIntentDTO> paymentIntentDTOList = paymentService.getAllPayments(limit, startingAfter);
+		return ResponseEntity.ok(paymentIntentDTOList);
 	}
 
 	// Endpoint para obtener un PaymentIntent
@@ -82,8 +91,8 @@ public class PaymentController extends GlobalExceptionHandler {
 	@Operation(summary = "Get a payment by paymentIntentId", description = "Fetches a payment by their ID")
 	public ResponseEntity<PaymentIntentDTO> getPaymentStatus(@PathVariable String paymentIntentId)
 			throws StripeException {
-		PaymentIntentDTO dto = paymentService.getPaymentStatusById(paymentIntentId);
-		return ResponseEntity.ok(dto);
+		PaymentIntentDTO paymentIntentDTO = paymentService.getPaymentStatusById(paymentIntentId);
+		return ResponseEntity.ok(paymentIntentDTO);
 
 	}
 

@@ -2,14 +2,14 @@ package com.payment.enums;
 
 import java.util.List;
 
-public enum PaymentIntentStatus {
+public enum PaymentIntentStatusEnum {
 	REQUIRES_PAYMENT_METHOD("requires_payment_method"), REQUIRES_CONFIRMATION("requires_confirmation"),
 	REQUIRES_ACTION("requires_action"), PROCESSING("processing"), SUCCEEDED("succeeded"), CANCELED("canceled"),
 	REQUIRES_CAPTURE("requires_capture"), FAILED("failed");
 
 	private final String status;
 
-	PaymentIntentStatus(String status) {
+	PaymentIntentStatusEnum(String status) {
 		this.status = status;
 	}
 

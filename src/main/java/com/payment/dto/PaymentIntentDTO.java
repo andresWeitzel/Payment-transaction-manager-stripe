@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PaymentIntentDTO {	
+public class PaymentIntentDTO {
 	private String id;
 	private double amount;
 	private String currency;
