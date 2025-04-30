@@ -80,7 +80,7 @@ public class PaymentController extends GlobalExceptionHandler {
 	// Endpoint para obtener todos los PaymentIntent
 	@GetMapping("/list")
 	@Operation(summary = "Get all paginated payment", description = "Fetches all paginated payment")
-	public ResponseEntity<List<PaymentIntentDTO>> getAllPayments(@RequestParam(defaultValue = "10") int limit,
+	public ResponseEntity<List<PaymentIntentDTO>> getAllPayments(@RequestParam(defaultValue = "30") int limit,
 			@RequestParam(required = false) String startingAfter) throws StripeException {
 		List<PaymentIntentDTO> paymentIntentDTOList = paymentService.getAllPayments(limit, startingAfter);
 		return ResponseEntity.ok(paymentIntentDTOList);

@@ -24,7 +24,7 @@ import com.stripe.param.PaymentIntentConfirmParams;
 import jakarta.annotation.PostConstruct;
 
 @Service
-public class PaymentCardService {
+public class PaymentStripeCardService {
 
 	@Value("${STRIPE_API_KEY}")
 	private String secretKey;
@@ -34,7 +34,7 @@ public class PaymentCardService {
 
 	private final PaymentRepository paymentRepository;
 
-	public PaymentCardService(PaymentRepository paymentRepository) {
+	public PaymentStripeCardService(PaymentRepository paymentRepository) {
 		this.paymentRepository = paymentRepository;
 	}
 
@@ -52,16 +52,50 @@ public class PaymentCardService {
 				.collect(Collectors.toList());
 	}
 
-	public PaymentIntentDTO confirmPaymentIntentWithTestCard(String paymentIntentId) throws StripeException {
-		try {
 
-			// Confirmar el PaymentIntent con un PaymentMethod de prueba
+	// Endpoint para confirmar un pago con tarjeta visa de prueba preseteada
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardVisa(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.VISA);
+	}
+
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardVisaDebit(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.VISA_DEBIT);
+	}
+
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardMastercard(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.MASTERCARD);
+	}
+
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardMastercard2(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.MASTERCARD_2);
+	}
+
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardAmex(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.AMEX);
+	}
+
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardDiscover(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.DISCOVER);
+	}
+
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardDiners(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.DINERS);
+	}
+
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardJcb(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.JCB);
+	}
+
+	public PaymentIntentDTO confirmPaymentIntentWithTestPmCardUnionpay(String paymentIntentId) throws StripeException {
+		return confirmPaymentIntentWithTestCard(paymentIntentId, TestCardTypeEnum.UNIONPAY);
+	}
+
+	private PaymentIntentDTO confirmPaymentIntentWithTestCard(String paymentIntentId, TestCardTypeEnum cardType) throws StripeException {
+		try {
 			PaymentIntentConfirmParams confirmParams = PaymentIntentConfirmParams.builder()
-					.setPaymentMethod("pm_card_visa") // Método de prueba, ya que los datos de las terjetas no pasan por
-														// el server
+					.setPaymentMethod(cardType.getPaymentMethodId())
 					.build();
 
-			// 2. Confirmar el PaymentIntent con ese paymentMethod
 			PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
 
 			String status = paymentIntent.getStatus();
@@ -72,22 +106,16 @@ public class PaymentCardService {
 
 			paymentIntent = paymentIntent.confirm(confirmParams);
 
-			// Intentar obtener el pago de la base de datos
 			Payment payment = paymentRepository.findByPaymentIntentId(paymentIntentId).orElse(null);
 
-			// Si el pago no se encuentra en la base de datos, manejamos la situación sin
-			// lanzar una excepción
 			if (payment == null) {
 				System.out.println("Payment not found with ID: " + paymentIntentId);
-
 				return new PaymentIntentDTO(paymentIntent.getId(), paymentIntent.getAmount(),
 						paymentIntent.getCurrency(), paymentIntent.getStatus(), paymentIntent.getClientSecret());
 			}
 
-			// Si se encuentra el pago, actualizamos el estado
 			payment.setStatus(paymentIntent.getStatus());
 			payment.setUpdatedAt(LocalDateTime.now());
-
 			paymentRepository.save(payment);
 
 			return new PaymentIntentDTO(paymentIntent.getId(), paymentIntent.getAmount(), paymentIntent.getCurrency(),
@@ -97,6 +125,7 @@ public class PaymentCardService {
 		}
 	}
 
+	// Endpoint para confirmar un pago con tarjeta
 	public PaymentIntentDTO confirmPaymentIntentWithCardDetails(String paymentIntentId,
 			PaymentConfirmCardDetailsDTO paymentConfirmCardDetailsDTO) throws StripeException {
 		try {
