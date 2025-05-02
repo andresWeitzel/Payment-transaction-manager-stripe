@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.payment.card.dto.PaymentConfirmCardDetailsDTO;
 import com.payment.card.dto.TestCardTypeDTO;
-import com.payment.card.service.PaymentStripeCardService;
+import com.payment.card.service.PaymentCardService;
 import com.payment.transaction.dto.PaymentIntentDTO;
 import com.payment.transaction.exception.GlobalExceptionHandler;
+import com.payment.transaction.service.PaymentSyncService;
 import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,23 +26,27 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v1/payments/card")
-@Tag(name = "Payment Stripe Card Controller", description = "Endpoints for cards and payment confirmations with Stripe test cards")
-public class PaymentStripeCardController extends GlobalExceptionHandler {
+@Tag(name = "Payment Card Controller", description = "Endpoints for cards and payment confirmations with Stripe test cards")
+public class PaymentCardController extends GlobalExceptionHandler {
 
-	private final PaymentStripeCardService paymentStripecardService;
+	private final PaymentCardService paymentStripecardService;
+	private final PaymentSyncService paymentSyncService;
 
 	@Autowired
-	public PaymentStripeCardController(PaymentStripeCardService paymentStripecardService) {
+	public PaymentCardController(PaymentCardService paymentStripecardService, 
+			PaymentSyncService paymentSyncService) {
 		this.paymentStripecardService = paymentStripecardService;
+		this.paymentSyncService = paymentSyncService;
 	}
 
-	
 	@PostMapping("/confirm/{paymentIntentId}")
 	@Operation(summary = "Confirm a PaymentIntent with card", description = "Confirms the payment using either an existing payment method or card details.")
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentWithCard(@PathVariable String paymentIntentId,
 			@RequestBody PaymentConfirmCardDetailsDTO paymentConfirmCardDetailsDTO) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithCardDetails(paymentIntentId,
 				paymentConfirmCardDetailsDTO);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
@@ -54,15 +60,18 @@ public class PaymentStripeCardController extends GlobalExceptionHandler {
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentWithTestPmCardVisa(@PathVariable String paymentIntentId)
 			throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardVisa(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
-
 
 	@PostMapping("/test/visa/debit/confirm/{paymentIntentId}")
 	@Operation(summary = "Confirm a PaymentIntent with preset card (pm_card_visa_debit)", description = "Confirm a PaymentIntent manually.")
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentIntentWithTestPmCardVisaDebit(
 			@Parameter(description = "PaymentIntent ID") @PathVariable String paymentIntentId) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardVisaDebit(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
@@ -71,6 +80,8 @@ public class PaymentStripeCardController extends GlobalExceptionHandler {
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentIntentWithTestPmCardMastercard(
 			@Parameter(description = "PaymentIntent ID") @PathVariable String paymentIntentId) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardMastercard(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
@@ -79,6 +90,8 @@ public class PaymentStripeCardController extends GlobalExceptionHandler {
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentIntentWithTestPmCardMastercard2(
 			@Parameter(description = "PaymentIntent ID") @PathVariable String paymentIntentId) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardMastercard2(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
@@ -87,6 +100,8 @@ public class PaymentStripeCardController extends GlobalExceptionHandler {
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentIntentWithTestPmCardAmex(
 			@Parameter(description = "PaymentIntent ID") @PathVariable String paymentIntentId) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardAmex(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
@@ -95,6 +110,8 @@ public class PaymentStripeCardController extends GlobalExceptionHandler {
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentIntentWithTestPmCardDiscover(
 			@Parameter(description = "PaymentIntent ID") @PathVariable String paymentIntentId) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardDiscover(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
@@ -103,6 +120,8 @@ public class PaymentStripeCardController extends GlobalExceptionHandler {
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentIntentWithTestPmCardDiners(
 			@Parameter(description = "PaymentIntent ID") @PathVariable String paymentIntentId) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardDiners(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
@@ -111,6 +130,8 @@ public class PaymentStripeCardController extends GlobalExceptionHandler {
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentIntentWithTestPmCardJcb(
 			@Parameter(description = "PaymentIntent ID") @PathVariable String paymentIntentId) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardJcb(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
 
@@ -119,7 +140,8 @@ public class PaymentStripeCardController extends GlobalExceptionHandler {
 	public ResponseEntity<PaymentIntentDTO> confirmPaymentIntentWithTestPmCardUnionpay(
 			@Parameter(description = "PaymentIntent ID") @PathVariable String paymentIntentId) throws StripeException {
 		PaymentIntentDTO paymentIntentDTO = paymentStripecardService.confirmPaymentIntentWithTestPmCardUnionpay(paymentIntentId);
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		paymentSyncService.syncPaymentStatus(paymentIntent);
 		return ResponseEntity.ok(paymentIntentDTO);
 	}
-
 }

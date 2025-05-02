@@ -2,7 +2,9 @@ package com.payment.transaction.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -32,9 +34,12 @@ public class PaymentService {
 	private String publishableKey;
 
 	private final PaymentRepository paymentRepository;
+	private final StripeService stripeService;
 
-	public PaymentService(PaymentRepository paymentRepository) {
+	@Autowired
+	public PaymentService(PaymentRepository paymentRepository, StripeService stripeService) {
 		this.paymentRepository = paymentRepository;
+		this.stripeService = stripeService;
 	}
 
 	// Se ejecuta después de construir la instancia
@@ -196,6 +201,55 @@ public class PaymentService {
 			// Lanza el error original para que sea manejado por el GlobalExceptionHandler
 			throw e;
 		}
+	}
+
+	public PaymentIntentDTO createPayment(PaymentIntentDTO paymentIntentDTO) throws StripeException {
+		// Create payment in Stripe
+		PaymentIntent paymentIntent = PaymentIntent.create(Map.of(
+			"amount", paymentIntentDTO.getAmount(),
+			"currency", paymentIntentDTO.getCurrency()
+		));
+
+		// Convert to DTO
+		PaymentIntentDTO createdPayment = stripeService.convertToDTO(paymentIntent);
+
+		// Save to database
+		Payment payment = new Payment();
+		payment.setPaymentIntentId(createdPayment.getId());
+		payment.setAmount((long) createdPayment.getAmount());
+		payment.setCurrency(createdPayment.getCurrency());
+		payment.setStatus(createdPayment.getStatus());
+		paymentRepository.save(payment);
+
+		return createdPayment;
+	}
+
+	public PaymentIntentDTO getPayment(String paymentIntentId) throws StripeException {
+		// Get from Stripe
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		return stripeService.convertToDTO(paymentIntent);
+	}
+
+	public List<Payment> getAllPaymentsFromDb() {
+		return paymentRepository.findAll();
+	}
+
+	public PaymentIntentDTO cancelPayment(String paymentIntentId) throws StripeException {
+		// Cancel in Stripe
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+		PaymentIntent cancelledPayment = paymentIntent.cancel();
+
+		// Update in database
+		Payment payment = paymentRepository.findByPaymentIntentId(paymentIntentId)
+			.orElseThrow(() -> new RuntimeException("Payment not found in database"));
+		payment.setStatus(cancelledPayment.getStatus());
+		paymentRepository.save(payment);
+
+		return stripeService.convertToDTO(cancelledPayment);
+	}
+
+	public void savePayment(Payment payment) {
+		paymentRepository.save(payment);
 	}
 
 }

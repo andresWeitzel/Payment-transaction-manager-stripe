@@ -24,7 +24,7 @@ import com.stripe.param.PaymentIntentConfirmParams;
 import jakarta.annotation.PostConstruct;
 
 @Service
-public class PaymentStripeCardService {
+public class PaymentCardService {
 
 	@Value("${STRIPE_API_KEY}")
 	private String secretKey;
@@ -34,7 +34,7 @@ public class PaymentStripeCardService {
 
 	private final PaymentRepository paymentRepository;
 
-	public PaymentStripeCardService(PaymentRepository paymentRepository) {
+	public PaymentCardService(PaymentRepository paymentRepository) {
 		this.paymentRepository = paymentRepository;
 	}
 

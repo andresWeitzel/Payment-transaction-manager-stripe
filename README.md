@@ -1,112 +1,147 @@
-# Payment Transaction Manager with Stripe Integration
+# Payment Transaction Manager
 
-A Spring Boot application for processing payments using Stripe's API. This project provides a robust solution for handling payment transactions, including validation, error handling, and test card processing.
+Sistema de gestión de pagos con integración de Stripe que permite procesar pagos con tarjetas de crédito y mantener un registro sincronizado de las transacciones.
 
-## Features
+## Características Principales
 
-- Integration with Stripe Payment Intents API
-- Test card processing capabilities
-- Spring Batch for transaction processing
-- Swagger UI for API documentation
-- MySQL database integration
-- Docker support for database deployment
+- ✅ Integración con Stripe para procesamiento de pagos
+- ✅ Sincronización automática de estados de pago
+- ✅ Gestión de historial de estados de pago
+- ✅ Soporte para múltiples tipos de tarjetas de prueba
+- ✅ API RESTful para gestión de pagos
+- ✅ Base de datos local para seguimiento de transacciones
+- ✅ Despliegue con Docker
 
-## Prerequisites
+## Requisitos Previos
 
-- Java 17 or higher
-- Maven 3.8 or higher
-- Docker and Docker Compose
-- MySQL 8.0 (via Docker)
-- Stripe API key (test mode)
+- Java 17 o superior
+- Maven
+- Cuenta de Stripe (modo test o producción)
+- Base de datos PostgreSQL
+- Docker y Docker Compose (opcional, para despliegue)
 
-## Getting Started
+## Configuración
 
-### 1. Clone the Repository
+1. Clonar el repositorio
+2. Configurar las variables de entorno en el archivo `.env`:
+   ```
+   STRIPE_API_KEY=sk_test_...
+   STRIPE_PUBLISHABLE_KEY=pk_test_...
+   ```
+
+3. Configurar la base de datos en `application.yml`:
+   ```yaml
+   spring:
+     datasource:
+       url: jdbc:postgresql://localhost:5432/payment_db
+       username: payment_user
+       password: payment_pass
+   ```
+
+## Despliegue con Docker
+
+El proyecto incluye configuración para despliegue con Docker:
+
+1. Construir la imagen:
 ```bash
-git clone [repository-url]
-cd payment-transaction-manager
+docker build -t payment-transaction-manager .
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the project root with your Stripe API key:
-```
-STRIPE_API_KEY=your_stripe_test_api_key
-```
-
-### 3. Start MySQL Database
+2. Iniciar los servicios con Docker Compose:
 ```bash
 docker-compose up -d
 ```
 
-### 4. Build and Run the Application
-```bash
-mvn clean install
-mvn spring-boot:run
-```
+Esto iniciará:
+- La aplicación Spring Boot en el puerto 8080
+- Una base de datos PostgreSQL en el puerto 5432
 
-The application will start on `http://localhost:8080`
-
-## API Documentation
-
-Access the Swagger UI at `http://localhost:8080/swagger-ui.html` to view and test the API endpoints.
-
-## Database Configuration
-
-The application uses MySQL with the following default configuration:
-- Database: payment_db
-- Username: payment_user
-- Password: payment_pass
-- Port: 3306
-
-## Test Cards
-
-The application supports various test cards for different scenarios:
-- Visa: 4242 4242 4242 4242
-- Mastercard: 5555 5555 5555 4444
-- American Express: 3782 822463 10005
-- Discover: 6011 1111 1111 1117
-
-## Project Structure
+## Estructura del Proyecto
 
 ```
 src/main/java/com/payment/
-├── card/
-│   ├── controller/    # Payment card controllers
-│   ├── dto/          # Data Transfer Objects
-│   └── service/      # Business logic
-├── transaction/      # Transaction processing
-└── PaymentTransactionManagerApplication.java
+├── card/                 # Gestión de tarjetas y confirmaciones
+├── transaction/          # Gestión de transacciones
+│   ├── controller/       # Controladores REST
+│   ├── service/          # Servicios de negocio
+│   ├── repository/       # Repositorios de datos
+│   ├── model/           # Entidades de dominio
+│   └── dto/             # Objetos de transferencia de datos
+└── exception/           # Manejo de excepciones
 ```
 
-## Troubleshooting
+## Endpoints Principales
 
-### Common Issues
+### Gestión de Pagos
+- `POST /api/v1/payments/create` - Crear un nuevo pago
+- `GET /api/v1/payments/{paymentIntentId}` - Obtener estado de un pago
+- `PUT /api/v1/payments/update/{paymentIntentId}` - Actualizar monto de pago
+- `POST /api/v1/payments/cancel/{paymentIntentId}` - Cancelar un pago
+- `PATCH /api/v1/payments/capture/{paymentIntentId}` - Capturar un pago autorizado
 
-1. **Database Connection Issues**
-   - Ensure MySQL container is running: `docker ps`
-   - Check database credentials in `application.yml`
-   - Verify port 3306 is not in use
+### Confirmación de Pagos con Tarjetas
+- `POST /api/v1/payments/card/confirm/{paymentIntentId}` - Confirmar pago con tarjeta
+- `POST /api/v1/payments/card/test/visa/confirm/{paymentIntentId}` - Confirmar con tarjeta Visa de prueba
+- `POST /api/v1/payments/card/test/mastercard/confirm/{paymentIntentId}` - Confirmar con tarjeta Mastercard de prueba
+- `GET /api/v1/payments/card/test/list` - Listar tarjetas de prueba disponibles
 
-2. **Stripe API Issues**
-   - Verify your Stripe API key is correct
-   - Ensure you're using test mode keys
-   - Check Stripe API documentation for error codes
+## Sincronización de Estados
 
-## Contributing
+El sistema implementa dos mecanismos de sincronización:
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+1. **Sincronización Manual**: A través de los endpoints de confirmación de pago
+2. **Sincronización Automática**: Mediante el `PaymentStatusPollingService` que verifica el estado de los pagos pendientes cada 30 segundos
 
-## License
+## Tarjetas de Prueba
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+El sistema incluye soporte para las siguientes tarjetas de prueba de Stripe:
 
-## References
+- Visa (4242 4242 4242 4242)
+- Visa Debit (4000 0000 0000 0002)
+- Mastercard (5555 5555 5555 4444)
+- Mastercard 2-series (2223 0031 2200 3222)
+- American Express (3782 8224 6310 005)
+- Discover (6011 1111 1111 1117)
+- Diners Club (3056 9309 0259 04)
+- JCB (3566 0020 2036 0505)
+- UnionPay (6200 0000 0000 0005)
 
-* [Stripe Payment Intents API Documentation](https://docs.stripe.com/api/payment_intents/object)
-* [Stripe Payment Intents Guide](https://docs.stripe.com/payments/payment-intents)
-* [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
-* [MySQL Documentation](https://dev.mysql.com/doc/)
+## Ejemplo de Uso
+
+1. Crear un nuevo pago:
+```bash
+curl -X POST http://localhost:8080/api/v1/payments/create \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 1000, "currency": "usd"}'
+```
+
+2. Confirmar el pago con una tarjeta de prueba:
+```bash
+curl -X POST http://localhost:8080/api/v1/payments/card/test/visa/confirm/{paymentIntentId}
+```
+
+## Seguridad
+
+- Las credenciales de Stripe se manejan a través de variables de entorno
+- Validación de estados de pago antes de operaciones críticas
+- Manejo centralizado de excepciones
+- Registro de historial de cambios de estado
+
+## Documentación Adicional
+
+- [Documentación de Stripe](https://stripe.com/docs)
+- [Guía de Integración de Stripe](https://stripe.com/docs/payments)
+- [Documentación de Spring Boot](https://spring.io/projects/spring-boot)
+- [Documentación de PostgreSQL](https://www.postgresql.org/docs/)
+
+## Contribución
+
+1. Fork el proyecto
+2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir un Pull Request
+
+## Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.

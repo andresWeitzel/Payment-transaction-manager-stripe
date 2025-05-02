@@ -20,4 +20,8 @@ spring:
     console:
       enabled: true    
 
+stripe:
+  api:
+    key: ${STRIPE_API_KEY}
+
 
