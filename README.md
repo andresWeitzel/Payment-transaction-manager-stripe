@@ -1,4 +1,4 @@
-# Payment Transaction Manager
+# Payment Transaction Manager 
 
 Sistema de gestión de pagos con integración de Stripe que permite procesar pagos con tarjetas de crédito y mantener un registro sincronizado de las transacciones.
 
